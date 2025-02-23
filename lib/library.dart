@@ -19,7 +19,7 @@ class Library {
     return DynamicLibrary.open('lib$_libName.so');
   }
   if (Platform.isWindows) {
-    return DynamicLibrary.open('$_libName.dll');
+    return DynamicLibrary.open('lib$_libName-2.dll');
   }
   throw UnsupportedError('Unknown platform: ${Platform.operatingSystem}');
 }();
