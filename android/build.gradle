@@ -42,7 +42,7 @@ android {
     // Invoke the shared CMake build with the Android Gradle Plugin.
     sourceSets {
         main {
-            jniLibs.srcDirs = ['../src/dynamicLib/android']
+            jniLibs.srcDirs = ['../src/dynamicLib/android/jni']
             jni.srcDirs = [] // 禁用自动编译 JNI 代码
         }
     }

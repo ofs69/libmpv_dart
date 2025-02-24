@@ -12,6 +12,11 @@ dependencies:
   flutter:
     sdk: flutter
   plugin_platform_interface: ^2.0.2
+  package_config: ^2.1.0
+  path: ^1.9.0
+  collection: ^1.15.0
+  http: ^1.2.1
+  archive: ^3.4.10
 
 dev_dependencies:
   ffigen: ^9.0.1
@@ -48,7 +53,8 @@ flutter:
         ffiPlugin: true
       windows:
         ffiPlugin: true
-
+executables:
+  setup: setup
   # To add assets to your plugin package, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
