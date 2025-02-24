@@ -15,7 +15,7 @@ class Player {
 
   Player(Map<String, String> options) {
     if (!Library.loaded) throw Exception('libmpv is not loaded!');
-    
+
     ctx = Library.libmpv.mpv_create();
     for (var entry in options.entries) {
       final key = entry.key.toNativeUtf8();
@@ -107,28 +107,63 @@ class Player {
     calloc.free(string);
   }
 
+  void setProperty(String name, dynamic value) {
+    if (value is double) {
+      setPropertyDouble(name, value);
+    } else if (value is int) {
+      setPropertyInt64(name, value);
+    } else if (value is String) {
+      setPropertyString(name, value);
+    } else if (value is bool) {
+      setPropertyFlag(name, value);
+    } else {
+      throw Exception('Invalid value type');
+    }
+  }
 
-void setProperty(String name,dynamic value){
+  Pointer<mpv_node> createStringNode(String string) {
+    Pointer<mpv_node> node = calloc<mpv_node>();
+    node.ref.formatAsInt = mpv_format.MPV_FORMAT_STRING.value;
+    node.ref.u.string = string.toNativeUtf8().cast<Char>();
+    return node;
+  }
 
-if(value is double){
-  setPropertyDouble(name,value);
-}
-else if(value is int){
-  setPropertyInt64(name, value);
+  Pointer<mpv_node> createIntNode(int value) {
+    Pointer<mpv_node> node = calloc<mpv_node>();
+    node.ref.formatAsInt = mpv_format.MPV_FORMAT_INT64.value;
+    node.ref.u.int64 = value;
+    return node;
+  }
 
-}
-else if(value is String){
-  setPropertyString(name, value);
-}
-else if(value is bool){
-  setPropertyFlag(name, value);
-}
-else{
-  throw Exception('Invalid value type');
-}
+  Pointer<mpv_node> createDoubleNode(double value) {
+    Pointer<mpv_node> node = calloc<mpv_node>();
+    node.ref.formatAsInt = mpv_format.MPV_FORMAT_DOUBLE.value;
+    node.ref.u.double_ = value;
+    return node;
+  }
 
-}
+  Pointer<mpv_node> createFlagNode(bool value) {
+    Pointer<mpv_node> node = calloc<mpv_node>();
+    node.ref.formatAsInt = mpv_format.MPV_FORMAT_FLAG.value;
+    node.ref.u.flag = value ? 1 : 0;
+    return node;
+  }
 
+  Pointer<mpv_node> createNode(dynamic value) {
+    if (value is double) {
+      return createDoubleNode(value);
+    } else if (value is int) {
+      return createIntNode(value);
+    } else if (value is String) {
+      return createStringNode(value);
+    } else if (value is bool) {
+      return createFlagNode(value);
+    } else {
+      throw Exception('Invalid value type');
+    }
+  }
 
-
+  void commandNode(Pointer<mpv_node> node1, Pointer<mpv_node> node2) {
+    Library.libmpv.mpv_command_node(ctx, node1, node2);
+  }
 }
