@@ -121,6 +121,13 @@ class Player {
     }
   }
 
+
+
+  void commandNode(Pointer<mpv_node> node1, Pointer<mpv_node> node2) {
+    Library.libmpv.mpv_command_node(ctx, node1, node2);
+  }
+}
+
   Pointer<mpv_node> createStringNode(String string) {
     Pointer<mpv_node> node = calloc<mpv_node>();
     node.ref.formatAsInt = mpv_format.MPV_FORMAT_STRING.value;
@@ -162,8 +169,3 @@ class Player {
       throw Exception('Invalid value type');
     }
   }
-
-  void commandNode(Pointer<mpv_node> node1, Pointer<mpv_node> node2) {
-    Library.libmpv.mpv_command_node(ctx, node1, node2);
-  }
-}
