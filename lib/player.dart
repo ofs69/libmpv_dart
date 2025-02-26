@@ -149,4 +149,15 @@ class Player {
           Library.libmpv.mpv_error_string(error).cast<Utf8>().toDartString());
     }
   }
+
+  Pointer<mpv_event> waitEvent(double timeout,{bool printEvent=false}){
+
+    Pointer<mpv_event> event=Library.libmpv.mpv_wait_event(ctx, timeout);
+    if (event.ref.error != mpv_error.MPV_ERROR_SUCCESS.value) {
+      throw Exception(
+          Library.libmpv.mpv_error_string(event.ref.error).cast<Utf8>().toDartString());
+    }
+   
+  return event;
+  }
 }

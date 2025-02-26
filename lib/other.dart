@@ -4,6 +4,7 @@ import 'dart:developer' as dev;
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 import 'package:libmpv_dart/gen/bindings.dart';
+import 'package:libmpv_dart/libmpv.dart';
   
   Pointer<mpv_node> createStringNode(String string) {
     Pointer<mpv_node> node = calloc<mpv_node>();
@@ -45,4 +46,9 @@ import 'package:libmpv_dart/gen/bindings.dart';
     } else {
       throw Exception('Invalid value type');
     }
+  }
+
+  String eventName(mpv_event_id eventId)
+  {
+    return Library.libmpv.mpv_event_name(eventId).cast<Utf8>().toDartString();
   }
