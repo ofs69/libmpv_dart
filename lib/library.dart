@@ -7,6 +7,7 @@ import 'package:libmpv_dart/gen/bindings.dart';
 class Library {
   static late LibMPV libmpv;
   static bool loaded = false;
+  static bool flagFirst = false;
   static const String _libName = 'mpv';
   static void init() {
     try {
@@ -25,7 +26,9 @@ class Library {
 }();
       Library.libmpv = LibMPV(_dylib);
       loaded = true;
+      flagFirst=true;
     } catch (e) {
+      flagFirst=true;
       debugPrint('error loading libmpv: ${e.toString()}');
     }
   }

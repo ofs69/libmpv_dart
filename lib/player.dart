@@ -14,13 +14,22 @@ class Player {
   int get handle => ctx.address;
 
   Player(Map<String, String> options) {
-    if (!Library.loaded) throw Exception('libmpv is not loaded!');
-
+    if (!Library.loaded) {
+      if (!Library.flagFirst) {
+        Library.init();
+      } else {
+        throw Exception('libmpv is not loaded!');
+      }
+    }
     ctx = Library.libmpv.mpv_create();
     for (var entry in options.entries) {
       final key = entry.key.toNativeUtf8();
       final value = entry.value.toNativeUtf8();
-      Library.libmpv.mpv_set_option_string(ctx, key.cast(), value.cast());
+      int error=Library.libmpv.mpv_set_option_string(ctx, key.cast(), value.cast());
+      if (error != mpv_error.MPV_ERROR_SUCCESS.value) {
+      throw Exception(
+          Library.libmpv.mpv_error_string(error).cast<Utf8>().toDartString());
+    }
       calloc.free(key);
       calloc.free(value);
     }
@@ -34,7 +43,11 @@ class Player {
     for (int i = 0; i < args.length; i++) {
       (arr + i).value = pointers[i];
     }
-    Library.libmpv.mpv_command(ctx, arr.cast());
+    int error=Library.libmpv.mpv_command(ctx, arr.cast());
+    if (error != mpv_error.MPV_ERROR_SUCCESS.value) {
+      throw Exception(
+          Library.libmpv.mpv_error_string(error).cast<Utf8>().toDartString());
+    }
     calloc.free(arr);
     pointers.forEach(calloc.free);
   }
@@ -46,12 +59,16 @@ class Player {
   ) {
     final namePtr = name.toNativeUtf8();
 
-    Library.libmpv.mpv_set_property(
+    int error = Library.libmpv.mpv_set_property(
       ctx,
       namePtr.cast(),
       format,
       data,
     );
+    if (error != mpv_error.MPV_ERROR_SUCCESS.value) {
+      throw Exception(
+          Library.libmpv.mpv_error_string(error).cast<Utf8>().toDartString());
+    }
     calloc.free(namePtr);
   }
 
@@ -121,10 +138,11 @@ class Player {
     }
   }
 
-
-
   void commandNode(Pointer<mpv_node> node1, Pointer<mpv_node> node2) {
-    Library.libmpv.mpv_command_node(ctx, node1, node2);
+    int error=Library.libmpv.mpv_command_node(ctx, node1, node2);
+     if (error != mpv_error.MPV_ERROR_SUCCESS.value) {
+      throw Exception(
+          Library.libmpv.mpv_error_string(error).cast<Utf8>().toDartString());
+    }
   }
 }
-
