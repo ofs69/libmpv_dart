@@ -33,7 +33,11 @@ class Player {
       calloc.free(key);
       calloc.free(value);
     }
-    Library.libmpv.mpv_initialize(ctx);
+    int error=Library.libmpv.mpv_initialize(ctx);
+    if (error != mpv_error.MPV_ERROR_SUCCESS.value) {
+      throw Exception(
+          Library.libmpv.mpv_error_string(error).cast<Utf8>().toDartString());
+    }
   }
 
   void command(List<String> args) {
