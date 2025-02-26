@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 
-import 'package:mpv_dart/libmpv.dart' as mpv_dart;
-import 'package:mpv_dart/library.dart';
+import 'package:libmpv_dart/libmpv.dart' as mpv_dart;
+import 'package:libmpv_dart/library.dart';
 
 void main() {
   Library.init();

@@ -3,7 +3,7 @@ import 'dart:io';
 import 'dart:developer' as dev;
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
-import 'package:mpv_dart/gen/bindings.dart';
+import 'package:libmpv_dart/gen/bindings.dart';
   
   Pointer<mpv_node> createStringNode(String string) {
     Pointer<mpv_node> node = calloc<mpv_node>();

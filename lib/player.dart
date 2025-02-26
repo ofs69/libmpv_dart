@@ -1,8 +1,8 @@
 import 'dart:ffi';
 import 'dart:developer' as dev;
 import 'package:ffi/ffi.dart';
-import 'package:mpv_dart/gen/bindings.dart';
-import 'package:mpv_dart/library.dart';
+import 'package:libmpv_dart/gen/bindings.dart';
+import 'package:libmpv_dart/library.dart';
 
 /// for desktop video texture properties
 /// setPropertyString('vo', 'libmpv');

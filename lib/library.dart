@@ -2,7 +2,7 @@ import 'dart:ffi';
 import 'dart:io';
 import 'dart:developer' as dev;
 import 'package:flutter/foundation.dart';
-import 'package:mpv_dart/gen/bindings.dart';
+import 'package:libmpv_dart/gen/bindings.dart';
 
 class Library {
   static late LibMPV libmpv;

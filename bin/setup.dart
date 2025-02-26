@@ -23,7 +23,7 @@ Future<void> setup4Windows({String mode = "debug"}) async {
     return;
   }
   // 查找特定插件的包信息
-  var pluginPackage = packageConfig.packages.firstWhere((pkg) => pkg.name == 'mpv_dart');
+  var pluginPackage = packageConfig.packages.firstWhere((pkg) => pkg.name == 'libmpv_dart');
   // 使用这个信息得到插件根目录
   var pluginRootPath = pluginPackage.packageUriRoot.toFilePath(windows: Platform.isWindows);
   // 新的目录路径
@@ -101,7 +101,7 @@ print("Downloading prebuilt library.");
   }
   
   // 查找特定插件的包信息
-  var pluginPackage = packageConfig.packages.firstWhere((pkg) => pkg.name == 'mpv_dart');
+  var pluginPackage = packageConfig.packages.firstWhere((pkg) => pkg.name == 'libmpv_dart');
   // 使用这个信息得到插件根目录
   var pluginRootPath = pluginPackage.packageUriRoot.toFilePath(windows: Platform.isWindows);
    
@@ -140,7 +140,7 @@ print("Downloading prebuilt library.");
 }
 
 void main(List<String> arguments) async {
-  print('Setting up mpv_dart...');
+  print('Setting up libmpv_dart...');
   String command = arguments[0];
   if (command == '--platform') {
     if (arguments[1] == 'linux') {
