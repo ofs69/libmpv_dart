@@ -2176,6 +2176,11 @@ enum mpv_event_id {
   /// decoding starts.
   MPV_EVENT_FILE_LOADED(8),
 
+//8 and 9 are deprecated,but it is still here for compatibility because mpv_waits_event() still returns them
+  MPV_EVENT_TRACKS_CHANGED(9),
+
+  MPV_EVENT_TRACK_SWITCHED(10),
+
   /// Idle mode was entered. In this mode, no file is played, and the playback
   /// core waits for new commands. (The command line player normally quits
   /// instead of entering idle mode, unless --idle was specified. If mpv
