@@ -150,7 +150,7 @@ class Player {
     }
   }
 
-  Pointer<mpv_event> waitEvent(double timeout,{bool printEvent=false}){
+  Pointer<mpv_event> waitEvent(double timeout){
 
     Pointer<mpv_event> event=Library.libmpv.mpv_wait_event(ctx, timeout);
     if (event.ref.error != mpv_error.MPV_ERROR_SUCCESS.value) {
