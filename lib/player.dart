@@ -160,4 +160,8 @@ class Player {
    
   return event;
   }
+
+  void destroy() {
+    Library.libmpv.mpv_destroy(ctx);
+  }
 }
