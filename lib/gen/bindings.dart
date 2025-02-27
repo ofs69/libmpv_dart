@@ -2176,7 +2176,7 @@ enum mpv_event_id {
   /// decoding starts.
   MPV_EVENT_FILE_LOADED(8),
 
-//8 and 9 are deprecated,but it is still here for compatibility because mpv_waits_event() still returns them
+//9 and 10 are deprecated,but it is still here for compatibility because mpv_waits_event() still returns them
   MPV_EVENT_TRACKS_CHANGED(9),
 
   MPV_EVENT_TRACK_SWITCHED(10),
@@ -2265,6 +2265,8 @@ enum mpv_event_id {
         6 => MPV_EVENT_START_FILE,
         7 => MPV_EVENT_END_FILE,
         8 => MPV_EVENT_FILE_LOADED,
+        9 => MPV_EVENT_TRACKS_CHANGED,
+        10 => MPV_EVENT_TRACK_SWITCHED,
         11 => MPV_EVENT_IDLE,
         14 => MPV_EVENT_TICK,
         16 => MPV_EVENT_CLIENT_MESSAGE,
