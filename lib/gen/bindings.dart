@@ -2223,6 +2223,9 @@ enum mpv_event_id {
   /// because there is no such thing as audio output embedding.
   MPV_EVENT_AUDIO_RECONFIG(18),
 
+//deprecated,but it is still here for compatibility because mpv_waits_event() still returns it
+  MPV_EVENT_METADATA_UPDATE(19),
+
   /// Happens when a seek was initiated. Playback stops. Usually it will
   /// resume with MPV_EVENT_PLAYBACK_RESTART as soon as the seek is finished.
   MPV_EVENT_SEEK(20),
@@ -2272,6 +2275,7 @@ enum mpv_event_id {
         16 => MPV_EVENT_CLIENT_MESSAGE,
         17 => MPV_EVENT_VIDEO_RECONFIG,
         18 => MPV_EVENT_AUDIO_RECONFIG,
+        19 => MPV_EVENT_METADATA_UPDATE,
         20 => MPV_EVENT_SEEK,
         21 => MPV_EVENT_PLAYBACK_RESTART,
         22 => MPV_EVENT_PROPERTY_CHANGE,
