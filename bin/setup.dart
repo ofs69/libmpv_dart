@@ -13,8 +13,8 @@ Future<void> setup4Windows({String mode = "debug"}) async {
   Uri url = Uri.parse("");
   String filename = "";
   
-    url = Uri.parse('placeholder');
-    filename = '';
+    url = Uri.parse('https://github.com/Playboy-Player/mpv-winbuild/releases/download/2025-02-26-5ae0e0f/mpv-dev-x86_64-20250226-git-5ae0e0f.zip');
+    filename = 'mpv-dev-lib.zip';
   
 
   var packageConfig = await findPackageConfig(Directory.current);
