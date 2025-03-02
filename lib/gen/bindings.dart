@@ -2176,6 +2176,11 @@ enum mpv_event_id {
   /// decoding starts.
   MPV_EVENT_FILE_LOADED(8),
 
+//9 and 10 are deprecated,but it is still here for compatibility because mpv_waits_event() still returns them
+  MPV_EVENT_TRACKS_CHANGED(9),
+
+  MPV_EVENT_TRACK_SWITCHED(10),
+
   /// Idle mode was entered. In this mode, no file is played, and the playback
   /// core waits for new commands. (The command line player normally quits
   /// instead of entering idle mode, unless --idle was specified. If mpv
@@ -2188,6 +2193,37 @@ enum mpv_event_id {
   /// start of the program), while the property behaves correctly.
   MPV_EVENT_IDLE(11),
 
+//12 13 and 15 are deprecated,but it is still here for compatibility because mpv_waits_event() still returns them
+  /**
+     * Playback was paused. This indicates the user pause state.
+     *
+     * The user pause state is the state the user requested (changed with the
+     * "pause" property). There is an internal pause state too, which is entered
+     * if e.g. the network is too slow (the "core-idle" property generally
+     * indicates whether the core is playing or waiting).
+     *
+     * This event is sent whenever any pause states change, not only the user
+     * state. You might get multiple events in a row while these states change
+     * independently. But the event ID sent always indicates the user pause
+     * state.
+     *
+     * If you don't want to deal with this, use mpv_observe_property() on the
+     * "pause" property and ignore MPV_EVENT_PAUSE/UNPAUSE. Likewise, the
+     * "core-idle" property tells you whether video is actually playing or not.
+     *
+     * @deprecated The event is redundant with mpv_observe_property() as
+     *             mentioned above, and might be removed in the far future.
+     */
+    MPV_EVENT_PAUSE(12),
+    /**
+     * Playback was unpaused. See MPV_EVENT_PAUSE for not so obvious details.
+     *
+     * @deprecated The event is redundant with mpv_observe_property() as
+     *             explained in the MPV_EVENT_PAUSE comments, and might be
+     *             removed in the far future.
+     */
+    MPV_EVENT_UNPAUSE(13),
+
   /// Sent every time after a video frame is displayed. Note that currently,
   /// this will be sent in lower frequency if there is no video, or playback
   /// is paused - but that will be removed in the future, and it will be
@@ -2196,6 +2232,8 @@ enum mpv_event_id {
   /// @deprecated Use mpv_observe_property() with relevant properties instead
   /// (such as "playback-time").
   MPV_EVENT_TICK(14),
+
+  MPV_EVENT_SCRIPT_INPUT_DISPATCH(15),
 
   /// Triggered by the script-message input command. The command uses the
   /// first argument of the command as client name (see mpv_client_name()) to
@@ -2217,6 +2255,9 @@ enum mpv_event_id {
   /// Similar to MPV_EVENT_VIDEO_RECONFIG. This is relatively uninteresting,
   /// because there is no such thing as audio output embedding.
   MPV_EVENT_AUDIO_RECONFIG(18),
+
+//deprecated,but it is still here for compatibility because mpv_waits_event() still returns it
+  MPV_EVENT_METADATA_UPDATE(19),
 
   /// Happens when a seek was initiated. Playback stops. Usually it will
   /// resume with MPV_EVENT_PLAYBACK_RESTART as soon as the seek is finished.
@@ -2260,11 +2301,17 @@ enum mpv_event_id {
         6 => MPV_EVENT_START_FILE,
         7 => MPV_EVENT_END_FILE,
         8 => MPV_EVENT_FILE_LOADED,
+        9 => MPV_EVENT_TRACKS_CHANGED,
+        10 => MPV_EVENT_TRACK_SWITCHED,
         11 => MPV_EVENT_IDLE,
+        12 => MPV_EVENT_PAUSE,
+        13 => MPV_EVENT_UNPAUSE,
         14 => MPV_EVENT_TICK,
+        15 => MPV_EVENT_SCRIPT_INPUT_DISPATCH,
         16 => MPV_EVENT_CLIENT_MESSAGE,
         17 => MPV_EVENT_VIDEO_RECONFIG,
         18 => MPV_EVENT_AUDIO_RECONFIG,
+        19 => MPV_EVENT_METADATA_UPDATE,
         20 => MPV_EVENT_SEEK,
         21 => MPV_EVENT_PLAYBACK_RESTART,
         22 => MPV_EVENT_PROPERTY_CHANGE,

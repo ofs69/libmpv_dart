@@ -1,1 +1,1 @@
-# mpv_dart
+# libmpv_dart

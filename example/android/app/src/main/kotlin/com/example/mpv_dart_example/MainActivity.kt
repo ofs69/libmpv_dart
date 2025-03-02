@@ -1,4 +1,4 @@
-package com.example.mpv_dart_example
+package com.example.libmpv_dart_example
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -1,4 +1,4 @@
-name: mpv_dart
+name: libmpv_dart
 description: "A new Flutter FFI plugin project."
 version: 0.0.1
 homepage:

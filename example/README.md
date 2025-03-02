@@ -1,6 +1,6 @@
-# mpv_dart_example
+# libmpv_dart_example
 
-Demonstrates how to use the mpv_dart plugin.
+Demonstrates how to use the libmpv_dart plugin.
 
 ## Getting Started
 

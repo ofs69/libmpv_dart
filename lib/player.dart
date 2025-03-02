@@ -1,8 +1,8 @@
 import 'dart:ffi';
 import 'dart:developer' as dev;
 import 'package:ffi/ffi.dart';
-import 'package:mpv_dart/gen/bindings.dart';
-import 'package:mpv_dart/library.dart';
+import 'package:libmpv_dart/gen/bindings.dart';
+import 'package:libmpv_dart/library.dart';
 
 /// for desktop video texture properties
 /// setPropertyString('vo', 'libmpv');
@@ -14,17 +14,30 @@ class Player {
   int get handle => ctx.address;
 
   Player(Map<String, String> options) {
-    if (!Library.loaded) throw Exception('libmpv is not loaded!');
-
+    if (!Library.loaded) {
+      if (!Library.flagFirst) {
+        Library.init();
+      } else {
+        throw Exception('libmpv is not loaded!');
+      }
+    }
     ctx = Library.libmpv.mpv_create();
     for (var entry in options.entries) {
       final key = entry.key.toNativeUtf8();
       final value = entry.value.toNativeUtf8();
-      Library.libmpv.mpv_set_option_string(ctx, key.cast(), value.cast());
+      int error=Library.libmpv.mpv_set_option_string(ctx, key.cast(), value.cast());
+      if (error != mpv_error.MPV_ERROR_SUCCESS.value) {
+      throw Exception(
+          Library.libmpv.mpv_error_string(error).cast<Utf8>().toDartString());
+    }
       calloc.free(key);
       calloc.free(value);
     }
-    Library.libmpv.mpv_initialize(ctx);
+    int error=Library.libmpv.mpv_initialize(ctx);
+    if (error != mpv_error.MPV_ERROR_SUCCESS.value) {
+      throw Exception(
+          Library.libmpv.mpv_error_string(error).cast<Utf8>().toDartString());
+    }
   }
 
   void command(List<String> args) {
@@ -34,7 +47,11 @@ class Player {
     for (int i = 0; i < args.length; i++) {
       (arr + i).value = pointers[i];
     }
-    Library.libmpv.mpv_command(ctx, arr.cast());
+    int error=Library.libmpv.mpv_command(ctx, arr.cast());
+    if (error != mpv_error.MPV_ERROR_SUCCESS.value) {
+      throw Exception(
+          Library.libmpv.mpv_error_string(error).cast<Utf8>().toDartString());
+    }
     calloc.free(arr);
     pointers.forEach(calloc.free);
   }
@@ -46,12 +63,16 @@ class Player {
   ) {
     final namePtr = name.toNativeUtf8();
 
-    Library.libmpv.mpv_set_property(
+    int error = Library.libmpv.mpv_set_property(
       ctx,
       namePtr.cast(),
       format,
       data,
     );
+    if (error != mpv_error.MPV_ERROR_SUCCESS.value) {
+      throw Exception(
+          Library.libmpv.mpv_error_string(error).cast<Utf8>().toDartString());
+    }
     calloc.free(namePtr);
   }
 
@@ -121,51 +142,26 @@ class Player {
     }
   }
 
-
-
   void commandNode(Pointer<mpv_node> node1, Pointer<mpv_node> node2) {
-    Library.libmpv.mpv_command_node(ctx, node1, node2);
-  }
-}
-
-  Pointer<mpv_node> createStringNode(String string) {
-    Pointer<mpv_node> node = calloc<mpv_node>();
-    node.ref.formatAsInt = mpv_format.MPV_FORMAT_STRING.value;
-    node.ref.u.string = string.toNativeUtf8().cast<Char>();
-    return node;
-  }
-
-  Pointer<mpv_node> createIntNode(int value) {
-    Pointer<mpv_node> node = calloc<mpv_node>();
-    node.ref.formatAsInt = mpv_format.MPV_FORMAT_INT64.value;
-    node.ref.u.int64 = value;
-    return node;
-  }
-
-  Pointer<mpv_node> createDoubleNode(double value) {
-    Pointer<mpv_node> node = calloc<mpv_node>();
-    node.ref.formatAsInt = mpv_format.MPV_FORMAT_DOUBLE.value;
-    node.ref.u.double_ = value;
-    return node;
-  }
-
-  Pointer<mpv_node> createFlagNode(bool value) {
-    Pointer<mpv_node> node = calloc<mpv_node>();
-    node.ref.formatAsInt = mpv_format.MPV_FORMAT_FLAG.value;
-    node.ref.u.flag = value ? 1 : 0;
-    return node;
-  }
-
-  Pointer<mpv_node> createNode(dynamic value) {
-    if (value is double) {
-      return createDoubleNode(value);
-    } else if (value is int) {
-      return createIntNode(value);
-    } else if (value is String) {
-      return createStringNode(value);
-    } else if (value is bool) {
-      return createFlagNode(value);
-    } else {
-      throw Exception('Invalid value type');
+    int error=Library.libmpv.mpv_command_node(ctx, node1, node2);
+     if (error != mpv_error.MPV_ERROR_SUCCESS.value) {
+      throw Exception(
+          Library.libmpv.mpv_error_string(error).cast<Utf8>().toDartString());
     }
   }
+
+  Pointer<mpv_event> waitEvent(double timeout){
+
+    Pointer<mpv_event> event=Library.libmpv.mpv_wait_event(ctx, timeout);
+    if (event.ref.error != mpv_error.MPV_ERROR_SUCCESS.value) {
+      throw Exception(
+          Library.libmpv.mpv_error_string(event.ref.error).cast<Utf8>().toDartString());
+    }
+   
+  return event;
+  }
+
+  void destroy() {
+    Library.libmpv.mpv_destroy(ctx);
+  }
+}
