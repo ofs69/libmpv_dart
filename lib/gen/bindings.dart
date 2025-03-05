@@ -2214,15 +2214,15 @@ enum mpv_event_id {
      * @deprecated The event is redundant with mpv_observe_property() as
      *             mentioned above, and might be removed in the far future.
      */
-    MPV_EVENT_PAUSE(12),
-    /**
+  MPV_EVENT_PAUSE(12),
+  /**
      * Playback was unpaused. See MPV_EVENT_PAUSE for not so obvious details.
      *
      * @deprecated The event is redundant with mpv_observe_property() as
      *             explained in the MPV_EVENT_PAUSE comments, and might be
      *             removed in the far future.
      */
-    MPV_EVENT_UNPAUSE(13),
+  MPV_EVENT_UNPAUSE(13),
 
   /// Sent every time after a video frame is displayed. Note that currently,
   /// this will be sent in lower frequency if there is no video, or playback

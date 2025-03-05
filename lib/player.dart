@@ -1,5 +1,4 @@
 import 'dart:ffi';
-import 'dart:developer' as dev;
 import 'package:ffi/ffi.dart';
 import 'package:libmpv_dart/gen/bindings.dart';
 import 'package:libmpv_dart/library.dart';
@@ -25,15 +24,16 @@ class Player {
     for (var entry in options.entries) {
       final key = entry.key.toNativeUtf8();
       final value = entry.value.toNativeUtf8();
-      int error=Library.libmpv.mpv_set_option_string(ctx, key.cast(), value.cast());
+      int error =
+          Library.libmpv.mpv_set_option_string(ctx, key.cast(), value.cast());
       if (error != mpv_error.MPV_ERROR_SUCCESS.value) {
-      throw Exception(
-          Library.libmpv.mpv_error_string(error).cast<Utf8>().toDartString());
-    }
+        throw Exception(
+            Library.libmpv.mpv_error_string(error).cast<Utf8>().toDartString());
+      }
       calloc.free(key);
       calloc.free(value);
     }
-    int error=Library.libmpv.mpv_initialize(ctx);
+    int error = Library.libmpv.mpv_initialize(ctx);
     if (error != mpv_error.MPV_ERROR_SUCCESS.value) {
       throw Exception(
           Library.libmpv.mpv_error_string(error).cast<Utf8>().toDartString());
@@ -47,7 +47,7 @@ class Player {
     for (int i = 0; i < args.length; i++) {
       (arr + i).value = pointers[i];
     }
-    int error=Library.libmpv.mpv_command(ctx, arr.cast());
+    int error = Library.libmpv.mpv_command(ctx, arr.cast());
     if (error != mpv_error.MPV_ERROR_SUCCESS.value) {
       throw Exception(
           Library.libmpv.mpv_error_string(error).cast<Utf8>().toDartString());
@@ -143,22 +143,23 @@ class Player {
   }
 
   void commandNode(Pointer<mpv_node> node1, Pointer<mpv_node> node2) {
-    int error=Library.libmpv.mpv_command_node(ctx, node1, node2);
-     if (error != mpv_error.MPV_ERROR_SUCCESS.value) {
+    int error = Library.libmpv.mpv_command_node(ctx, node1, node2);
+    if (error != mpv_error.MPV_ERROR_SUCCESS.value) {
       throw Exception(
           Library.libmpv.mpv_error_string(error).cast<Utf8>().toDartString());
     }
   }
 
-  Pointer<mpv_event> waitEvent(double timeout){
-
-    Pointer<mpv_event> event=Library.libmpv.mpv_wait_event(ctx, timeout);
+  Pointer<mpv_event> waitEvent(double timeout) {
+    Pointer<mpv_event> event = Library.libmpv.mpv_wait_event(ctx, timeout);
     if (event.ref.error != mpv_error.MPV_ERROR_SUCCESS.value) {
-      throw Exception(
-          Library.libmpv.mpv_error_string(event.ref.error).cast<Utf8>().toDartString());
+      throw Exception(Library.libmpv
+          .mpv_error_string(event.ref.error)
+          .cast<Utf8>()
+          .toDartString());
     }
-   
-  return event;
+
+    return event;
   }
 
   void destroy() {
