@@ -88,7 +88,7 @@ Future<void> setup4Windows({String mode = "debug"}) async {
 Future<void> setup4Android() async {
   // 文件的URL
   var url = Uri.parse(
-    'https://github.com/jarnedemeulemeester/libmpv-android/releases/download/v0.4.1/libmpv-release.aar',
+    'https://github.com/Playboy-Player/libmpv_android_build/archive/refs/heads/main.zip',
   );
   print("Downloading prebuilt library.");
   var response = await http.get(url);
@@ -113,15 +113,20 @@ Future<void> setup4Android() async {
       // 获得文件路径的所有组成部分
       var filePathParts = path.split(file.name);
 
-      // 重新组合文件路径
-      var filePath = path.joinAll(filePathParts);
+      // 只保留从 "jni" 开始的路径部分
+      int jniIndex = filePathParts.indexOf("jni");
+      if (jniIndex == -1) {
+        continue; // 跳过不包含 "jni" 的文件
+      }
+      var newFilePathParts = filePathParts.sublist(jniIndex);
+      var newFilePath = path.joinAll(newFilePathParts);
 
       // 只处理路径中包含 "jni" 的文件或文件夹
       if (file.name.contains("jni")) {
         if (file.isFile) {
           final data = file.content as List<int>;
-          final outputPath =
-              path.join("$pluginRootPath/../src/dynamicLib/android", filePath);
+          final outputPath = path.join(
+              "$pluginRootPath/../src/dynamicLib/android", newFilePath);
           // 确保父目录存在
           final directory = Directory(path.dirname(outputPath));
           if (!directory.existsSync()) {
@@ -130,7 +135,7 @@ Future<void> setup4Android() async {
           File(outputPath).writeAsBytesSync(data);
         } else {
           Directory(
-            path.join("$pluginRootPath/../src/dynamicLib/android", filePath),
+            path.join("$pluginRootPath/../src/dynamicLib/android", newFilePath),
           ).createSync(recursive: true);
         }
       }
