@@ -1,21 +1,21 @@
+// ignore_for_file: avoid_print
+
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:archive/archive.dart';
 import 'package:package_config/package_config.dart';
 import 'package:path/path.dart' as path;
-import 'package:collection/collection.dart';
 
-Future<void> setup4Linux() async {
-
-}
+Future<void> setup4Linux() async {}
 
 Future<void> setup4Windows({String mode = "debug"}) async {
   Uri url = Uri.parse("");
   String filename = "";
-  
-    url = Uri.parse('https://github.com/Playboy-Player/mpv-winbuild/releases/download/2025-02-26-5ae0e0f/mpv-dev-x86_64-20250226-git-5ae0e0f.zip');
-    filename = 'mpv-dev-lib.zip';
-  
+
+  url = Uri.parse(
+    'https://github.com/Playboy-Player/mpv-winbuild/releases/download/2025-02-26-5ae0e0f/mpv-dev-x86_64-20250226-git-5ae0e0f.zip',
+  );
+  filename = 'mpv-dev-lib.zip';
 
   var packageConfig = await findPackageConfig(Directory.current);
   if (packageConfig == null) {
@@ -23,9 +23,11 @@ Future<void> setup4Windows({String mode = "debug"}) async {
     return;
   }
   // 查找特定插件的包信息
-  var pluginPackage = packageConfig.packages.firstWhere((pkg) => pkg.name == 'libmpv_dart');
+  var pluginPackage =
+      packageConfig.packages.firstWhere((pkg) => pkg.name == 'libmpv_dart');
   // 使用这个信息得到插件根目录
-  var pluginRootPath = pluginPackage.packageUriRoot.toFilePath(windows: Platform.isWindows);
+  var pluginRootPath =
+      pluginPackage.packageUriRoot.toFilePath(windows: Platform.isWindows);
   // 新的目录路径
   var newFolder = 'src/dynamicLib/windows';
   var newPath = path.join(path.dirname(pluginRootPath), newFolder);
@@ -83,61 +85,68 @@ Future<void> setup4Windows({String mode = "debug"}) async {
   }
 }
 
-
-
 Future<void> setup4Android() async {
   // 文件的URL
   var url = Uri.parse(
-      'https://github.com/jarnedemeulemeester/libmpv-android/releases/download/v0.4.1/libmpv-release.aar');
-print("Downloading prebuilt library.");
+    'https://github.com/Playboy-Player/libmpv_android_build/archive/refs/heads/main.zip',
+  );
+  print("Downloading prebuilt library.");
   var response = await http.get(url);
   if (response.statusCode == 200) {
     var archive = ZipDecoder().decodeBytes(response.bodyBytes);
-    
-  var packageConfig = await findPackageConfig(Directory.current);
-  if (packageConfig == null) {
-    print("Package config not found.");
-    return;
-  }
-  
-  // 查找特定插件的包信息
-  var pluginPackage = packageConfig.packages.firstWhere((pkg) => pkg.name == 'libmpv_dart');
-  // 使用这个信息得到插件根目录
-  var pluginRootPath = pluginPackage.packageUriRoot.toFilePath(windows: Platform.isWindows);
-   
-  
+
+    var packageConfig = await findPackageConfig(Directory.current);
+    if (packageConfig == null) {
+      print("Package config not found.");
+      return;
+    }
+
+    // 查找特定插件的包信息
+    var pluginPackage =
+        packageConfig.packages.firstWhere((pkg) => pkg.name == 'libmpv_dart');
+    // 使用这个信息得到插件根目录
+    var pluginRootPath =
+        pluginPackage.packageUriRoot.toFilePath(windows: Platform.isWindows);
+
     // 循环每个文件
     for (var file in archive) {
-  // 获得文件路径的所有组成部分
-  var filePathParts = path.split(file.name);
+      // 获得文件路径的所有组成部分
+      var filePathParts = path.split(file.name);
 
-  // 重新组合文件路径
-  var filePath = path.joinAll(filePathParts);
-
-  // 只处理路径中包含 "jni" 的文件或文件夹
-  if (file.name.contains("jni")) {
-    if (file.isFile) {
-      final data = file.content as List<int>;
-      final outputPath =
-          path.join("${pluginRootPath}/../src/dynamicLib/android", filePath);
-      // 确保父目录存在
-      final directory = Directory(path.dirname(outputPath));
-      if (!directory.existsSync()) {
-        directory.createSync(recursive: true);
+      // 只保留从 "jni" 开始的路径部分
+      int jniIndex = filePathParts.indexOf("jni");
+      if (jniIndex == -1) {
+        continue; // 跳过不包含 "jni" 的文件
       }
-      File(outputPath).writeAsBytesSync(data);
-    } else {
-      Directory(
-          path.join("${pluginRootPath}/../src/dynamicLib/android", filePath))
-        ..createSync(recursive: true);
+      var newFilePathParts = filePathParts.sublist(jniIndex);
+      var newFilePath = path.joinAll(newFilePathParts);
+
+      // 只处理路径中包含 "jni" 的文件或文件夹
+      if (file.name.contains("jni")) {
+        if (file.isFile) {
+          final data = file.content as List<int>;
+          final outputPath = path.join(
+              "$pluginRootPath/../src/dynamicLib/android", newFilePath);
+          // 确保父目录存在
+          final directory = Directory(path.dirname(outputPath));
+          if (!directory.existsSync()) {
+            directory.createSync(recursive: true);
+          }
+          File(outputPath).writeAsBytesSync(data);
+        } else {
+          Directory(
+            path.join("$pluginRootPath/../src/dynamicLib/android", newFilePath),
+          ).createSync(recursive: true);
+        }
+      }
     }
-  }
-}
     print('Extraction done.');
   } else {
     print('Failed to download file: ${response.statusCode}');
   }
 }
+
+Future<void> setup4MacOS() async {}
 
 void main(List<String> arguments) async {
   print('Setting up libmpv_dart...');
@@ -146,14 +155,13 @@ void main(List<String> arguments) async {
     if (arguments[1] == 'linux') {
       await setup4Linux();
     } else if (arguments[1] == 'windows') {
-      
-      
-
-    await setup4Windows();
-    }
-
-    if (arguments[1] == 'android') {
+      await setup4Windows();
+    } else if (arguments[1] == 'android') {
       await setup4Android();
+    } else if (arguments[1] == 'macos') {
+      await setup4MacOS();
+    } else {
+      print('Platform is not supported!');
     }
   }
 }
