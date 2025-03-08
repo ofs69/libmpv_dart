@@ -21,8 +21,8 @@ flutter pub add libmpv_dart
 For windows/android users,run following command in your terminal:
 
 ```shell
-dart run libmpv_dart --platform windows
-dart run libmpv_dart --platform android
+dart run libmpv_dart:setup --platform windows
+dart run libmpv_dart:setup --platform android
 ```
 
 For linux users,libmpv_dart only support Debian-based Linux distributions now.
