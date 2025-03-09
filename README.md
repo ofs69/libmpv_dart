@@ -25,7 +25,11 @@ dart run libmpv_dart:setup --platform windows
 dart run libmpv_dart:setup --platform android
 ```
 
-For linux users,libmpv_dart only support Debian-based Linux distributions now.
+For linux users,all you need to do is install libmpv.
+
+```shell
+sudo apt install libmpv-dart
+```
 
 ## How to use?
 
