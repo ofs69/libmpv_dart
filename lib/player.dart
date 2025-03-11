@@ -160,6 +160,100 @@ class Player {
     }
   }
 
+  void setOptionAll(
+    String name,
+    mpv_format format,
+    Pointer<Void> data,
+  ) {
+    final namePtr = name.toNativeUtf8();
+
+    int error = Library.libmpv.mpv_set_option(
+      ctx,
+      namePtr.cast(),
+      format,
+      data,
+    );
+    if (error != mpv_error.MPV_ERROR_SUCCESS.value) {
+      throw Exception(
+          Library.libmpv.mpv_error_string(error).cast<Utf8>().toDartString());
+    }
+    calloc.free(namePtr);
+  }
+
+  void setOptionFlag(String name, bool value) {
+    final ptr = calloc<Bool>(1)..value = value;
+    setOptionAll(
+      name,
+      mpv_format.MPV_FORMAT_FLAG,
+      ptr.cast(),
+    );
+    calloc.free(ptr);
+  }
+
+  void setOptionDouble(
+    String name,
+    double value,
+  ) {
+    final ptr = calloc<Double>(1)..value = value;
+    setOptionAll(
+      name,
+      mpv_format.MPV_FORMAT_DOUBLE,
+      ptr.cast(),
+    );
+    calloc.free(ptr);
+  }
+
+  void setOptionInt64(
+    String name,
+    int value,
+  ) {
+    final ptr = calloc<Int64>(1)..value = value;
+    setOptionAll(
+      name,
+      mpv_format.MPV_FORMAT_INT64,
+      ptr.cast(),
+    );
+    calloc.free(ptr);
+  }
+
+  void setOptionString(
+    String name,
+    String value,
+  ) {
+    final string = value.toNativeUtf8();
+    final ptr = calloc<Pointer<Void>>(1);
+    ptr.value = Pointer.fromAddress(string.address);
+    setOptionAll(
+      name,
+      mpv_format.MPV_FORMAT_STRING,
+      ptr.cast(),
+    );
+    calloc.free(ptr);
+    calloc.free(string);
+  }
+
+  void setOptionNode(String name, Pointer<mpv_node> node) {
+    final namePtr = name.toNativeUtf8();
+    setOptionAll(name, mpv_format.MPV_FORMAT_NODE, node.cast());
+    calloc.free(namePtr);
+  }
+
+  void setOption(String name, dynamic value) {
+    if (value is double) {
+      setOptionDouble(name, value);
+    } else if (value is int) {
+      setOptionInt64(name, value);
+    } else if (value is String) {
+      setOptionString(name, value);
+    } else if (value is bool) {
+      setOptionFlag(name, value);
+    } else if (value is Pointer<mpv_node>) {
+      setOptionNode(name, value);
+    } else {
+      throw Exception('Invalid value type');
+    }
+  }
+
   void commandNode(Pointer<mpv_node> node1, Pointer<mpv_node> node2) {
     int error = Library.libmpv.mpv_command_node(ctx, node1, node2);
     if (error != mpv_error.MPV_ERROR_SUCCESS.value) {
