@@ -138,6 +138,12 @@ class Player {
     calloc.free(string);
   }
 
+  void setPropertyNode(String name, Pointer<mpv_node> node) {
+    final namePtr = name.toNativeUtf8();
+    setPropertyAll(name, mpv_format.MPV_FORMAT_NODE, node.cast());
+    calloc.free(namePtr);
+  }
+
   void setProperty(String name, dynamic value) {
     if (value is double) {
       setPropertyDouble(name, value);
@@ -147,6 +153,8 @@ class Player {
       setPropertyString(name, value);
     } else if (value is bool) {
       setPropertyFlag(name, value);
+    } else if (value is Pointer<mpv_node>) {
+      setPropertyNode(name, value);
     } else {
       throw Exception('Invalid value type');
     }
