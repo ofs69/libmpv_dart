@@ -12,7 +12,7 @@ class Player {
   late Pointer<mpv_handle> ctx;
   int get handle => ctx.address;
 
-  Player(Map<String, String> options) {
+  Player(Map<String, String> options, {bool initialize = true}) {
     if (!Library.loaded) {
       if (!Library.flagFirst) {
         Library.init();
@@ -33,6 +33,16 @@ class Player {
       calloc.free(key);
       calloc.free(value);
     }
+    if (initialize) {
+      int error = Library.libmpv.mpv_initialize(ctx);
+      if (error != mpv_error.MPV_ERROR_SUCCESS.value) {
+        throw Exception(
+            Library.libmpv.mpv_error_string(error).cast<Utf8>().toDartString());
+      }
+    }
+  }
+
+  void initialize() {
     int error = Library.libmpv.mpv_initialize(ctx);
     if (error != mpv_error.MPV_ERROR_SUCCESS.value) {
       throw Exception(
