@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:libmpv_dart/libmpv.dart';
 import 'package:libmpv_dart_example/player_page.dart';
 
 void main() {
+  Library.init();
   runApp(const MyApp());
 }
 

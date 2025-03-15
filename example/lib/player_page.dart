@@ -1,4 +1,6 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:libmpv_dart/libmpv.dart';
 
 class PlayerPage extends StatefulWidget {
   const PlayerPage({super.key});
@@ -8,9 +10,34 @@ class PlayerPage extends StatefulWidget {
 }
 
 class PlayerPageState extends State<PlayerPage> {
+  late Player _player;
+  // late MpvVideoController _controller;
+  bool _loaded = false;
+
   bool _menuExpanded = false;
   double _seekingPos = 0;
   bool _seeking = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _init();
+  }
+
+  void _init() async {
+    _player = Player(
+      {
+        'config': 'yes',
+        'input-default-bindings': 'yes',
+      },
+      videoOutput: true,
+    );
+
+    // _controller = await MpvVideoController.create(_player, const VideoArgs());
+    setState(() {
+      _loaded = true;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,10 +96,33 @@ class PlayerPageState extends State<PlayerPage> {
   Widget _buildPlayer(ColorScheme colorScheme) {
     return ClipRRect(
       borderRadius: const BorderRadius.all(Radius.circular(18)),
-      child: Container(
-        color: Colors.black,
-        child: const SizedBox.expand(),
-      ),
+      child: _loaded
+          ? Stack(
+              children: [
+                const ColoredBox(
+                  color: Colors.black,
+                  child: SizedBox.expand(),
+                ),
+                SizedBox.expand(
+                  child: FittedBox(
+                    child: ValueListenableBuilder<int>(
+                      valueListenable: _player.id,
+                      builder: (context, id, _) {
+                        return SizedBox(
+                          width: _player.videoWidth.toDouble(),
+                          height: _player.videoHeight.toDouble(),
+                          child: Texture(textureId: id),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : Container(
+              color: Colors.black,
+              child: const SizedBox.expand(),
+            ),
     );
   }
 
@@ -153,10 +203,27 @@ class PlayerPageState extends State<PlayerPage> {
             ],
           ),
         ),
+        IconButton(
+          tooltip: 'button 1',
+          onPressed: () {
+            _player.command(['stop']);
+          },
+          icon: const Icon(
+            Icons.code,
+          ),
+        ),
+        const SizedBox(width: 10),
         IconButton.filledTonal(
           tooltip: 'openfile',
           icon: const Icon(Icons.file_open_outlined),
-          onPressed: () {},
+          onPressed: () async {
+            var res =
+                await FilePicker.platform.pickFiles(lockParentWindow: true);
+            if (res != null) {
+              String link = res.files.single.path!;
+              _player.command(['loadfile', link]);
+            }
+          },
         ),
         const SizedBox(width: 10),
         IconButton.filled(
@@ -167,20 +234,35 @@ class PlayerPageState extends State<PlayerPage> {
             ),
           ),
           iconSize: 28,
-          onPressed: () {},
-          icon: const Icon(Icons.play_arrow_outlined),
+          onPressed: () {
+            _player.command(['cycle', 'pause']);
+          },
+          icon: const Icon(Icons.sync),
         ),
         const SizedBox(width: 10),
         IconButton.filledTonal(
           tooltip: 'command',
           icon: const Icon(Icons.terminal),
-          onPressed: () {},
+          onPressed: () {
+            _player.command(['show-text', 'custom command']);
+          },
+        ),
+        const SizedBox(width: 10),
+        IconButton(
+          tooltip: 'VO Info',
+          onPressed: () {
+            _player.command(['keypress', 'I']);
+          },
+          icon: const Icon(
+            Icons.info_outline,
+          ),
         ),
         Expanded(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               IconButton(
+                tooltip: 'Custom UI panel',
                 onPressed: () {
                   setState(() {
                     _menuExpanded = !_menuExpanded;
