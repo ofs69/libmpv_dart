@@ -1,11 +1,3 @@
-/// {@template video_params}
-///
-/// VideoParams
-/// -----------
-///
-/// Video parameters, as output by the decoder (with overrides like aspect etc. applied). This has a number of sub-properties.
-///
-/// {@endtemplate}
 class VideoParams {
   /// The pixel format as string. This uses the same names as used in other places of mpv.
   final String? pixelformat;
@@ -14,16 +6,16 @@ class VideoParams {
   final String? hwPixelformat;
 
   /// Video size as integers, with no aspect correction applied.
-  final int? w;
+  final int w;
 
   /// Video size as integers, with no aspect correction applied.
-  final int? h;
+  final int h;
 
   /// Video size as integers, scaled for correct aspect ratio.
-  final int? dw;
+  final int dw;
 
   /// Video size as integers, scaled for correct aspect ratio.
-  final int? dh;
+  final int dh;
 
   /// Display aspect ratio as float.
   final double? aspect;
@@ -68,10 +60,10 @@ class VideoParams {
   const VideoParams({
     this.pixelformat,
     this.hwPixelformat,
-    this.w,
-    this.h,
-    this.dw,
-    this.dh,
+    this.w = 0,
+    this.h = 0,
+    this.dw = 0,
+    this.dh = 0,
     this.aspect,
     this.par,
     this.colormatrix,

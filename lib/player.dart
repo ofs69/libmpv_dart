@@ -1,17 +1,17 @@
 import 'dart:async';
-import 'dart:collection';
 import 'dart:ffi';
-import 'package:ffi/ffi.dart';
+
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-import 'package:libmpv_dart/gen/bindings.dart';
+import 'package:ffi/ffi.dart';
 
+import 'package:libmpv_dart/gen/bindings.dart';
 import 'package:libmpv_dart/library.dart';
-import 'package:libmpv_dart/video/params.dart';
+import 'package:libmpv_dart/video/audio_params.dart';
+import 'package:libmpv_dart/video/video_params.dart';
 
 typedef WakeUpCallback = Void Function(Pointer<mpv_handle>);
 typedef WakeUpNativeCallable = NativeCallable<WakeUpCallback>;
-
 typedef EventCallback = Future<void> Function(Pointer<mpv_event>);
 
 MethodChannel _channel = const MethodChannel('libmpv_dart');
@@ -37,7 +37,8 @@ class Player {
           Library.libmpv.mpv_set_option_string(ctx, key.cast(), value.cast());
       if (error != mpv_error.MPV_ERROR_SUCCESS.value) {
         throw Exception(
-            Library.libmpv.mpv_error_string(error).cast<Utf8>().toDartString());
+          Library.libmpv.mpv_error_string(error).cast<Utf8>().toDartString(),
+        );
       }
       calloc.free(key);
       calloc.free(value);
@@ -45,12 +46,18 @@ class Player {
     int error = Library.libmpv.mpv_initialize(ctx);
     if (error != mpv_error.MPV_ERROR_SUCCESS.value) {
       throw Exception(
-          Library.libmpv.mpv_error_string(error).cast<Utf8>().toDartString());
+        Library.libmpv.mpv_error_string(error).cast<Utf8>().toDartString(),
+      );
     }
 
     <String, mpv_format>{
-      'video-out-params': mpv_format.MPV_FORMAT_NODE,
+      'pause': mpv_format.MPV_FORMAT_FLAG,
       'time-pos': mpv_format.MPV_FORMAT_DOUBLE,
+      'duration': mpv_format.MPV_FORMAT_DOUBLE,
+      'volume': mpv_format.MPV_FORMAT_DOUBLE,
+      'speed': mpv_format.MPV_FORMAT_DOUBLE,
+      'video-out-params': mpv_format.MPV_FORMAT_NODE,
+      'audio-params': mpv_format.MPV_FORMAT_NODE,
     }.forEach(
       (property, format) {
         final name = property.toNativeUtf8();
@@ -63,6 +70,7 @@ class Player {
         calloc.free(name);
       },
     );
+
     // TODO: dispose
     final nativeCallable = WakeUpNativeCallable.listener(_mpvCallback);
     final nativeFunction = nativeCallable.nativeFunction;
@@ -91,14 +99,37 @@ class Player {
     id.value = textureId;
   }
 
-  Future<void> refreshVO(int? width, int? height) async {
+  void observeProperty(
+    String property,
+    mpv_format format, {
+    int propertyId = 0,
+  }) {
+    final name = property.toNativeUtf8();
+    Library.libmpv.mpv_observe_property(
+      ctx,
+      propertyId,
+      name.cast(),
+      format,
+    );
+    calloc.free(name);
+  }
+
+  void unObserveProperty(int propertyId) {
+    Library.libmpv.mpv_unobserve_property(
+      ctx,
+      0,
+    );
+  }
+
+  // if the width/height is null, the output size will be same as video size
+  Future<void> setOutputSize({int? width, int? height}) async {
     if (!_videoOutput) return;
     final textureId = await _channel.invokeMethod(
       'VOSetSize',
       {
         'handle': handle,
-        'width': (width ?? videoWidth),
-        'height': (height ?? videoHeight),
+        'width': (width ?? videoParams.value.dw),
+        'height': (height ?? videoParams.value.dh),
       },
     );
 
@@ -114,14 +145,23 @@ class Player {
     }
     int error = Library.libmpv.mpv_command(ctx, arr.cast());
     if (error != mpv_error.MPV_ERROR_SUCCESS.value) {
-      throw Exception(
-          Library.libmpv.mpv_error_string(error).cast<Utf8>().toDartString());
+      debugPrint(
+        Library.libmpv.mpv_error_string(error).cast<Utf8>().toDartString(),
+      );
     }
     calloc.free(arr);
     pointers.forEach(calloc.free);
   }
 
-  void setPropertyAll(
+  void commandNode(Pointer<mpv_node> node1, Pointer<mpv_node> node2) {
+    int error = Library.libmpv.mpv_command_node(ctx, node1, node2);
+    if (error != mpv_error.MPV_ERROR_SUCCESS.value) {
+      debugPrint(
+          Library.libmpv.mpv_error_string(error).cast<Utf8>().toDartString());
+    }
+  }
+
+  void _setProperty(
     String name,
     mpv_format format,
     Pointer<Void> data,
@@ -135,15 +175,16 @@ class Player {
       data,
     );
     if (error != mpv_error.MPV_ERROR_SUCCESS.value) {
-      throw Exception(
-          Library.libmpv.mpv_error_string(error).cast<Utf8>().toDartString());
+      debugPrint(
+        Library.libmpv.mpv_error_string(error).cast<Utf8>().toDartString(),
+      );
     }
     calloc.free(namePtr);
   }
 
   void setPropertyFlag(String name, bool value) {
     final ptr = calloc<Bool>(1)..value = value;
-    setPropertyAll(
+    _setProperty(
       name,
       mpv_format.MPV_FORMAT_FLAG,
       ptr.cast(),
@@ -156,7 +197,7 @@ class Player {
     double value,
   ) {
     final ptr = calloc<Double>(1)..value = value;
-    setPropertyAll(
+    _setProperty(
       name,
       mpv_format.MPV_FORMAT_DOUBLE,
       ptr.cast(),
@@ -169,7 +210,7 @@ class Player {
     int value,
   ) {
     final ptr = calloc<Int64>(1)..value = value;
-    setPropertyAll(
+    _setProperty(
       name,
       mpv_format.MPV_FORMAT_INT64,
       ptr.cast(),
@@ -184,7 +225,7 @@ class Player {
     final string = value.toNativeUtf8();
     final ptr = calloc<Pointer<Void>>(1);
     ptr.value = Pointer.fromAddress(string.address);
-    setPropertyAll(
+    _setProperty(
       name,
       mpv_format.MPV_FORMAT_STRING,
       ptr.cast(),
@@ -193,6 +234,7 @@ class Player {
     calloc.free(string);
   }
 
+  @Deprecated('It is recommended to use setProperty with typed arguments')
   void setProperty(String name, dynamic value) {
     if (value is double) {
       setPropertyDouble(name, value);
@@ -203,92 +245,81 @@ class Player {
     } else if (value is bool) {
       setPropertyFlag(name, value);
     } else {
-      throw Exception('Invalid value type');
-    }
-  }
-
-  Future<void> observeProperty(
-    String property,
-    Future<void> Function(String) listener,
-  ) async {
-    final reply = property.hashCode;
-    observed[property] = listener;
-    final name = property.toNativeUtf8();
-    Library.libmpv.mpv_observe_property(
-      ctx,
-      reply,
-      name.cast(),
-      mpv_format.MPV_FORMAT_NONE,
-    );
-    calloc.free(name);
-  }
-
-  void commandNode(Pointer<mpv_node> node1, Pointer<mpv_node> node2) {
-    int error = Library.libmpv.mpv_command_node(ctx, node1, node2);
-    if (error != mpv_error.MPV_ERROR_SUCCESS.value) {
-      throw Exception(
-          Library.libmpv.mpv_error_string(error).cast<Utf8>().toDartString());
+      debugPrint('Value type is not supported');
     }
   }
 
   Pointer<mpv_event> waitEvent(double timeout) {
     Pointer<mpv_event> event = Library.libmpv.mpv_wait_event(ctx, timeout);
     if (event.ref.error != mpv_error.MPV_ERROR_SUCCESS.value) {
-      throw Exception(Library.libmpv
-          .mpv_error_string(event.ref.error)
-          .cast<Utf8>()
-          .toDartString());
+      debugPrint(
+        Library.libmpv
+            .mpv_error_string(event.ref.error)
+            .cast<Utf8>()
+            .toDartString(),
+      );
     }
 
     return event;
   }
 
   void destroy() {
+    if (_videoOutput) {
+      _channel.invokeMethod(
+        'VODispose',
+        {'handle': handle},
+      );
+    }
     Library.libmpv.mpv_destroy(ctx);
   }
 
-  final StreamController<VideoParams> _videoParamsController =
-      StreamController<VideoParams>.broadcast();
-
-  late final Stream<VideoParams> videoParamsStream =
-      _videoParamsController.stream.distinct(
-    (previous, current) => previous == current,
-  );
-
-  final HashMap<String, Future<void> Function(String)> observed = HashMap();
-
-  // state for video render
-  VideoParams videoParams = const VideoParams();
-  int videoHeight = 0;
-  int videoWidth = 0;
+  // texture id for video rendering
   final ValueNotifier<int> id = ValueNotifier<int>(0);
-  // state
-
-  final StreamController<int> _heightController =
-      StreamController<int>.broadcast();
-  final StreamController<int> _widthController =
-      StreamController<int>.broadcast();
-
-  late final Stream<int> heightStream = _heightController.stream.distinct(
-    (previous, current) => previous == current,
-  );
-  late final Stream<int> widthStream = _widthController.stream.distinct(
-    (previous, current) => previous == current,
-  );
+  final ValueNotifier<VideoParams> videoParams =
+      ValueNotifier(const VideoParams());
+  final ValueNotifier<AudioParams> audioParams =
+      ValueNotifier(const AudioParams());
+  final ValueNotifier<bool> paused = ValueNotifier<bool>(true);
+  final ValueNotifier<int> position = ValueNotifier<int>(0);
+  final ValueNotifier<int> duration = ValueNotifier<int>(0);
+  final ValueNotifier<double> volume = ValueNotifier<double>(100);
+  final ValueNotifier<double> speed = ValueNotifier<double>(1.0);
+  final ValueNotifier<int> playlistIndex = ValueNotifier<int>(0);
 
   void _mpvCallback(Pointer<mpv_handle> ctx) async {
     while (true) {
       final event = Library.libmpv.mpv_wait_event(ctx, 0);
       if (event == nullptr) return;
       if (event.ref.event_id == mpv_event_id.MPV_EVENT_NONE) return;
-      await _mpvHandler(event);
+      await _mpvEventHandler(event);
     }
   }
 
-  Future<void> _mpvHandler(Pointer<mpv_event> event) async {
+  Future<void> _mpvEventHandler(Pointer<mpv_event> event) async {
     if (event.ref.event_id == mpv_event_id.MPV_EVENT_PROPERTY_CHANGE) {
       final prop = event.ref.data.cast<mpv_event_property>();
-      if (prop.ref.name.cast<Utf8>().toDartString() == 'video-out-params' &&
+      final propName = prop.ref.name.cast<Utf8>().toDartString();
+      if (propName == 'pause' &&
+          prop.ref.format == mpv_format.MPV_FORMAT_FLAG) {
+        paused.value = prop.ref.data.cast<Int8>().value != 0;
+      }
+      if (propName == 'duration' &&
+          prop.ref.format == mpv_format.MPV_FORMAT_DOUBLE) {
+        duration.value = prop.ref.data.cast<Double>().value ~/ 1;
+      }
+      if (propName == 'volume' &&
+          prop.ref.format == mpv_format.MPV_FORMAT_DOUBLE) {
+        volume.value = prop.ref.data.cast<Double>().value;
+      }
+      if (propName == 'speed' &&
+          prop.ref.format == mpv_format.MPV_FORMAT_DOUBLE) {
+        speed.value = prop.ref.data.cast<Double>().value;
+      }
+      if (propName == 'time-pos' &&
+          prop.ref.format == mpv_format.MPV_FORMAT_DOUBLE) {
+        position.value = prop.ref.data.cast<Double>().value ~/ 1;
+      }
+      if (propName == 'video-out-params' &&
           prop.ref.format == mpv_format.MPV_FORMAT_NODE) {
         final node = prop.ref.data.cast<mpv_node>().ref;
         final data = <String, dynamic>{};
@@ -332,15 +363,12 @@ class Player {
           alpha: data['alpha'],
         );
 
-        videoParams = params;
-        if (!_videoParamsController.isClosed) {
-          _videoParamsController.add(params);
-        }
+        videoParams.value = params;
 
         final dw = params.dw;
         final dh = params.dh;
         final rotate = params.rotate ?? 0;
-        if (dw is int && dh is int) {
+        if (dw > 0 && dh > 0) {
           final int width;
           final int height;
           if (rotate == 0 || rotate == 180) {
@@ -351,34 +379,59 @@ class Player {
             width = dh;
             height = dw;
           }
-          videoHeight = height;
-          videoWidth = width;
-          if (!_widthController.isClosed) {
-            _widthController.add(width);
-          }
-          if (!_heightController.isClosed) {
-            _heightController.add(height);
-          }
+          setOutputSize(width: width, height: height);
         }
-        refreshVO(videoWidth, videoHeight);
       }
-      if (observed.containsKey(prop.ref.name.cast<Utf8>().toDartString())) {
-        if (prop.ref.format == mpv_format.MPV_FORMAT_NONE) {
-          final fn = observed[prop.ref.name.cast<Utf8>().toDartString()];
-          if (fn != null) {
-            final data =
-                Library.libmpv.mpv_get_property_string(ctx, prop.ref.name);
-            if (data != nullptr) {
-              try {
-                await fn.call(data.cast<Utf8>().toDartString());
-              } catch (exception, stacktrace) {
-                debugPrint(exception.toString());
-                debugPrint(stacktrace.toString());
+      if (propName == 'audio-params' &&
+          prop.ref.format == mpv_format.MPV_FORMAT_NODE) {
+        final data = prop.ref.data.cast<mpv_node>();
+        final list = data.ref.u.list.ref;
+        final params = <String, dynamic>{};
+        for (int i = 0; i < list.num; i++) {
+          final key = list.keys[i].cast<Utf8>().toDartString();
+
+          switch (key) {
+            case 'format':
+              {
+                params[key] =
+                    list.values[i].u.string.cast<Utf8>().toDartString();
+                break;
               }
-              Library.libmpv.mpv_free(data.cast());
-            }
+            case 'samplerate':
+              {
+                params[key] = list.values[i].u.int64;
+                break;
+              }
+            case 'channels':
+              {
+                params[key] =
+                    list.values[i].u.string.cast<Utf8>().toDartString();
+                break;
+              }
+            case 'channel-count':
+              {
+                params[key] = list.values[i].u.int64;
+                break;
+              }
+            case 'hr-channels':
+              {
+                params[key] =
+                    list.values[i].u.string.cast<Utf8>().toDartString();
+                break;
+              }
+            default:
+              {
+                break;
+              }
           }
         }
+        audioParams.value = AudioParams(
+          format: params['format'],
+          sampleRate: params['samplerate'],
+          channels: params['channels'],
+          channelCount: params['channel-count'],
+          hrChannels: params['hr-channels'],
+        );
       }
     }
   }

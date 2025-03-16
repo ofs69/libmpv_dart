@@ -6,7 +6,7 @@ a package that provides ability to access libmpv feature in dart application.
 | -------- | ---------- | ------------ |
 | Windows  | ✓          | ✓            |
 | Linux    | ✓          |              |
-| macOS    |            |              |
+| macOS    | ✓          |              |
 | android  | ✓          |              |
 
 ## credits

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:libmpv_dart/libmpv.dart';
@@ -32,8 +34,8 @@ class PlayerPageState extends State<PlayerPage> {
       },
       videoOutput: true,
     );
+    _player.setPropertyString('keep-open', 'yes');
 
-    // _controller = await MpvVideoController.create(_player, const VideoArgs());
     setState(() {
       _loaded = true;
     });
@@ -109,8 +111,8 @@ class PlayerPageState extends State<PlayerPage> {
                       valueListenable: _player.id,
                       builder: (context, id, _) {
                         return SizedBox(
-                          width: _player.videoWidth.toDouble(),
-                          height: _player.videoHeight.toDouble(),
+                          width: _player.videoParams.value.dw.toDouble(),
+                          height: _player.videoParams.value.dh.toDouble(),
                           child: Texture(textureId: id),
                         );
                       },
@@ -135,24 +137,38 @@ class PlayerPageState extends State<PlayerPage> {
         thumbSize: const WidgetStatePropertyAll(Size(6, 12)),
         overlayShape: SliderComponentShape.noOverlay,
       ),
-      child: Slider(
-        max: 100,
-        value: _seeking ? _seekingPos : 60,
-        onChanged: (value) {
-          setState(() {
-            _seekingPos = value;
-          });
-        },
-        onChangeStart: (value) {
-          setState(() {
-            _seeking = true;
-          });
-        },
-        onChangeEnd: (value) {
-          // seek then setstate
-          setState(() {
-            _seeking = false;
-          });
+      child: ValueListenableBuilder(
+        valueListenable: _player.duration,
+        builder: (context, dur, _) {
+          return ValueListenableBuilder(
+            valueListenable: _player.position,
+            builder: (constext, pos, _) {
+              double p = _seeking ? _seekingPos : pos * 1.0;
+              p = min(p, dur * 1.0);
+              p = max(0, p);
+              return Slider(
+                max: dur * 1.0,
+                value: p,
+                onChanged: (value) {
+                  setState(() {
+                    _seekingPos = value;
+                  });
+                },
+                onChangeStart: (value) {
+                  setState(() {
+                    _seeking = true;
+                  });
+                },
+                onChangeEnd: (value) {
+                  // _player.seek(value ~/ 1);
+                  _player.command(['seek', value.toString(), 'absolute']);
+                  setState(() {
+                    _seeking = false;
+                  });
+                },
+              );
+            },
+          );
         },
       ),
     );
@@ -164,6 +180,63 @@ class PlayerPageState extends State<PlayerPage> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('panel'),
+        ),
+        body: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          children: [
+            ValueListenableBuilder(
+              valueListenable: _player.duration,
+              builder: (context, dur, _) {
+                return ValueListenableBuilder(
+                  valueListenable: _player.position,
+                  builder: (constext, pos, _) {
+                    return SizedBox(
+                      height: 30,
+                      child: Text('position - duration: $pos - $dur'),
+                    );
+                  },
+                );
+              },
+            ),
+            ValueListenableBuilder(
+              valueListenable: _player.volume,
+              builder: (context, value, _) {
+                return SizedBox(
+                  height: 30,
+                  child: Text('volume: $value'),
+                );
+              },
+            ),
+            ValueListenableBuilder(
+              valueListenable: _player.speed,
+              builder: (context, value, _) {
+                return SizedBox(
+                  height: 30,
+                  child: Text('speed: $value'),
+                );
+              },
+            ),
+            ValueListenableBuilder(
+              valueListenable: _player.videoParams,
+              builder: (context, value, _) {
+                return Container(
+                  height: 200,
+                  alignment: Alignment.center,
+                  child: Text(value.toString()),
+                );
+              },
+            ),
+            ValueListenableBuilder(
+              valueListenable: _player.audioParams,
+              builder: (context, value, _) {
+                return Container(
+                  height: 100,
+                  alignment: Alignment.center,
+                  child: Text(value.toString()),
+                );
+              },
+            ),
+          ],
         ),
       ),
     );
@@ -178,7 +251,9 @@ class PlayerPageState extends State<PlayerPage> {
             children: [
               const SizedBox(width: 16),
               IconButton(
-                onPressed: () {},
+                onPressed: () {
+                  _player.setPropertyDouble('volume', 0);
+                },
                 icon: const Icon(Icons.volume_up),
               ),
               SizedBox(
@@ -193,10 +268,17 @@ class PlayerPageState extends State<PlayerPage> {
                     ),
                     overlayShape: SliderComponentShape.noOverlay,
                   ),
-                  child: Slider(
-                    max: 100,
-                    value: 30,
-                    onChanged: (value) {},
+                  child: ValueListenableBuilder(
+                    valueListenable: _player.volume,
+                    builder: (context, value, _) {
+                      return Slider(
+                        max: 100,
+                        value: value,
+                        onChanged: (value) {
+                          _player.setPropertyDouble('volume', value);
+                        },
+                      );
+                    },
                   ),
                 ),
               ),
@@ -204,12 +286,12 @@ class PlayerPageState extends State<PlayerPage> {
           ),
         ),
         IconButton(
-          tooltip: 'button 1',
+          tooltip: 'stop',
           onPressed: () {
             _player.command(['stop']);
           },
           icon: const Icon(
-            Icons.code,
+            Icons.stop_outlined,
           ),
         ),
         const SizedBox(width: 10),
@@ -220,8 +302,8 @@ class PlayerPageState extends State<PlayerPage> {
             var res =
                 await FilePicker.platform.pickFiles(lockParentWindow: true);
             if (res != null) {
-              String link = res.files.single.path!;
-              _player.command(['loadfile', link]);
+              String url = res.files.single.path!;
+              _player.command(['loadfile', url]);
             }
           },
         ),
