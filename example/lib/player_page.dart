@@ -45,7 +45,7 @@ class PlayerPageState extends State<PlayerPage> {
   Widget build(BuildContext context) {
     late final colorScheme = Theme.of(context).colorScheme;
     late final backgroundColor = Color.alphaBlend(
-      colorScheme.primary.withValues(alpha: 0.04),
+      colorScheme.primary,
       colorScheme.surface,
     );
     return Scaffold(
@@ -132,9 +132,9 @@ class PlayerPageState extends State<PlayerPage> {
     return SliderTheme(
       data: SliderThemeData(
         // ignore: deprecated_member_use
-        year2023: false,
+
         trackHeight: 4,
-        thumbSize: const WidgetStatePropertyAll(Size(6, 12)),
+
         overlayShape: SliderComponentShape.noOverlay,
       ),
       child: ValueListenableBuilder(
