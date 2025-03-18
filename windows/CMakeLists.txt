@@ -7,16 +7,87 @@ cmake_minimum_required(VERSION 3.14)
 # Project-level configuration.
 set(PROJECT_NAME "libmpv_dart")
 project(${PROJECT_NAME} LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Invoke the build for native code shared with the other target platforms.
-# This can be changed to accommodate different builds.
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../src" "${CMAKE_CURRENT_BINARY_DIR}/shared")
+set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../src")
+set(DYLIB "${SRC_DIR}/dynamicLib/windows")
+
+# Explicitly opt in to modern CMake behaviors to avoid warnings with recent
+# versions of CMake.
+cmake_policy(VERSION 3.14...3.25)
+
+# This value is used when generating builds using this plugin, so it must
+# not be changed
+set(PLUGIN_NAME "libmpv_dart_plugin")
+
+include_directories(
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src"
+  "${CMAKE_CURRENT_SOURCE_DIR}/include"
+)
+
+# Any new source files that you add to the plugin should be added here.
+list(APPEND PLUGIN_SOURCES
+  "include/libmpv_dart/libmpv_dart_plugin.h"
+  "include/libmpv_dart/angle_surface_manager.h"
+  "include/libmpv_dart/video_output.h"
+  "include/libmpv_dart/video_output_manager.h"
+  "include/libmpv_dart/thread_pool.h"
+  "libmpv_dart_plugin.cpp"
+  "angle_surface_manager.cpp"
+  "video_output.cpp"
+  "video_output_manager.cpp"
+)
+
+
+# Define the plugin library target. Its name must not be changed (see comment
+# on PLUGIN_NAME above).
+add_library(${PLUGIN_NAME} SHARED
+"include/libmpv_dart/libmpv_dart_plugin_c_api.h"
+"libmpv_dart_plugin_c_api.cpp"
+${PLUGIN_SOURCES}
+)
+
+# Apply a standard set of build settings that are configured in the
+# application-level CMakeLists.txt. This can be removed for plugins that want
+# full control over build settings.
+apply_standard_settings(${PLUGIN_NAME})
+
+# Symbols are hidden by default to reduce the chance of accidental conflicts
+# between plugins. This should not be removed; any symbols that should be
+# exported should be explicitly exported with the FLUTTER_PLUGIN_EXPORT macro.
+set_target_properties(${PLUGIN_NAME} PROPERTIES
+  CXX_VISIBILITY_PRESET hidden)
+target_compile_definitions(${PLUGIN_NAME} PRIVATE FLUTTER_PLUGIN_IMPL)
+
+
+
+# Source include directories and library dependencies. Add any plugin-specific
+# dependencies here.
+target_include_directories(
+  ${PLUGIN_NAME} INTERFACE
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src"
+  "${CMAKE_CURRENT_SOURCE_DIR}/include"
+)
+
+target_link_libraries(
+  ${PLUGIN_NAME} PRIVATE
+  flutter
+  flutter_wrapper_plugin
+
+  "${DYLIB}/libmpv.dll.a"
+  "${DYLIB}/libEGL.dll.lib"
+  "${DYLIB}/libGLESv2.dll.lib"
+)
 
 # List of absolute paths to libraries that should be bundled with the plugin.
 # This list could contain prebuilt libraries, or libraries created by an
 # external build triggered from this build file.
 
-set(libmpv_dart_bundled_libraries
-    "${MPV_LIBRARY_PATH}"
+set(
+  libmpv_dart_bundled_libraries
+  "${DYLIB}/libmpv-2.dll"
+  "${DYLIB}/libEGL.dll"
+  "${DYLIB}/libGLESv2.dll"
   PARENT_SCOPE
 )

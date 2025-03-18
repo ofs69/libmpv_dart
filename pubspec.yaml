@@ -36,7 +36,8 @@ flutter:
       macos:
         ffiPlugin: true
       windows:
-        ffiPlugin: true
+        # ffiPlugin: true
+        pluginClass: LibmpvDartPlugin
 executables:
   setup: setup
 ffigen:

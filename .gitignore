@@ -27,3 +27,7 @@ migrate_working_dir/
 **/doc/api/
 .dart_tool/
 build/
+.vs/
+
+src/dynamicLib/windows/libmpv-2.dll
+src/dynamicLib/windows/libmpv.dll.a
