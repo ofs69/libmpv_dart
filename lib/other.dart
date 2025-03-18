@@ -30,6 +30,13 @@ Pointer<mpv_node> createFlagNode(bool value) {
   return node;
 }
 
+Pointer<mpv_node> createMapNode(Pointer<mpv_node_list> list) {
+  Pointer<mpv_node> node = calloc<mpv_node>();
+  node.ref.formatAsInt = mpv_format.MPV_FORMAT_NODE_MAP.value;
+  node.ref.u.list = list;
+  return node;
+}
+
 Pointer<mpv_node> createNode(dynamic value) {
   if (value is double) {
     return createDoubleNode(value);
@@ -39,9 +46,29 @@ Pointer<mpv_node> createNode(dynamic value) {
     return createStringNode(value);
   } else if (value is bool) {
     return createFlagNode(value);
+  } else if (value is Pointer<mpv_node_list>) {
+    return createMapNode(value);
   } else {
     throw Exception('Invalid value type');
   }
+}
+
+Pointer<mpv_node_list> createNodeList(
+    List<String> key, List<Pointer<mpv_node>> values) {
+  Pointer<mpv_node_list> list = calloc<mpv_node_list>();
+  if (key.length != values.length) {
+    throw Exception('Key and value length must be equal');
+  }
+  list.ref.num = key.length;
+  list.ref.values = calloc<mpv_node>(key.length);
+  for (int i = 0; i < key.length; i++) {
+    list.ref.values[i] = values[i].ref;
+  }
+  list.ref.keys = calloc<Pointer<Char>>(key.length);
+  for (int i = 0; i < key.length; i++) {
+    list.ref.keys[i] = key[i].toNativeUtf8().cast<Char>();
+  }
+  return list;
 }
 
 String eventName(mpv_event_id eventId) {
