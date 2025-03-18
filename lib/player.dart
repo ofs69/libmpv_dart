@@ -21,9 +21,8 @@ class Player {
   int get handle => ctx.address;
   bool _videoOutput = false;
 
-
-  Player(Map<String, String> options, {bool initialize = true,bool videoOutput = false}) {
-
+  Player(Map<String, String> options,
+      {bool initialize = true, bool videoOutput = false}) {
     if (!Library.loaded) {
       if (!Library.flagFirst) {
         Library.init();
@@ -46,15 +45,11 @@ class Player {
       calloc.free(value);
     }
     if (initialize) {
-      int error = Library.libmpv.mpv_initialize(ctx);
-      if (error != mpv_error.MPV_ERROR_SUCCESS.value) {
-        throw Exception(
-            Library.libmpv.mpv_error_string(error).cast<Utf8>().toDartString());
-      }
+      init(videoOutput: videoOutput);
     }
   }
 
-  void initialize() {
+  void init({bool videoOutput = false}) {
     int error = Library.libmpv.mpv_initialize(ctx);
     if (error != mpv_error.MPV_ERROR_SUCCESS.value) {
       throw Exception(
@@ -246,16 +241,13 @@ class Player {
     calloc.free(string);
   }
 
-
   void setPropertyNode(String name, Pointer<mpv_node> node) {
     final namePtr = name.toNativeUtf8();
-    setPropertyAll(name, mpv_format.MPV_FORMAT_NODE, node.cast());
+    _setProperty(name, mpv_format.MPV_FORMAT_NODE, node.cast());
     calloc.free(namePtr);
   }
 
-
   @Deprecated('It is recommended to use setProperty with typed arguments')
-
   void setProperty(String name, dynamic value) {
     if (value is double) {
       setPropertyDouble(name, value);
