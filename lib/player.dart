@@ -398,8 +398,8 @@ class Player {
   final ValueNotifier<AudioParams> audioParams =
       ValueNotifier(const AudioParams());
   final ValueNotifier<bool> paused = ValueNotifier<bool>(true);
-  final ValueNotifier<int> position = ValueNotifier<int>(0);
-  final ValueNotifier<int> duration = ValueNotifier<int>(0);
+  final ValueNotifier<double> position = ValueNotifier<double>(0.0);
+  final ValueNotifier<double> duration = ValueNotifier<double>(0.0);
   final ValueNotifier<double> volume = ValueNotifier<double>(100);
   final ValueNotifier<double> speed = ValueNotifier<double>(1.0);
 
@@ -424,7 +424,7 @@ class Player {
         paused.value = prop.ref.data.cast<Int8>().value != 0;
       } else if (propName == 'duration' &&
           prop.ref.format == mpv_format.MPV_FORMAT_DOUBLE) {
-        duration.value = prop.ref.data.cast<Double>().value ~/ 1;
+        duration.value = prop.ref.data.cast<Double>().value;
       } else if (propName == 'volume' &&
           prop.ref.format == mpv_format.MPV_FORMAT_DOUBLE) {
         volume.value = prop.ref.data.cast<Double>().value;
@@ -433,7 +433,7 @@ class Player {
         speed.value = prop.ref.data.cast<Double>().value;
       } else if (propName == 'time-pos' &&
           prop.ref.format == mpv_format.MPV_FORMAT_DOUBLE) {
-        position.value = prop.ref.data.cast<Double>().value ~/ 1;
+        position.value = prop.ref.data.cast<Double>().value;
       } else if (propName == 'video-out-params' &&
           prop.ref.format == mpv_format.MPV_FORMAT_NODE) {
         final node = prop.ref.data.cast<mpv_node>().ref;
