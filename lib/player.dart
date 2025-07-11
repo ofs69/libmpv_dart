@@ -68,6 +68,7 @@ class Player {
       'speed': mpv_format.MPV_FORMAT_DOUBLE,
       'video-out-params': mpv_format.MPV_FORMAT_NODE,
       'audio-params': mpv_format.MPV_FORMAT_NODE,
+      'path': mpv_format.MPV_FORMAT_STRING,
     }.forEach(
       (property, format) {
         final name = property.toNativeUtf8();
@@ -80,7 +81,6 @@ class Player {
         calloc.free(name);
       },
     );
-      'path': mpv_format.MPV_FORMAT_STRING,
 
     // TODO: dispose
     final nativeCallable = WakeUpNativeCallable.listener(_mpvCallback);
