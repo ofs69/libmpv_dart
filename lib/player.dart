@@ -426,7 +426,7 @@ class Player {
         paused.value = prop.ref.data.cast<Int8>().value != 0;
       } else if (propName == 'path' &&
           prop.ref.format == mpv_format.MPV_FORMAT_STRING) {
-        path.value = prop.ref.data.cast<Utf8>().toDartString();
+        path.value = prop.ref.data.cast<Pointer<Utf8>>().value.toDartString();
       } else if (propName == 'duration' &&
           prop.ref.format == mpv_format.MPV_FORMAT_DOUBLE) {
         duration.value = prop.ref.data.cast<Double>().value;
