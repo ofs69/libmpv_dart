@@ -80,6 +80,7 @@ class Player {
         calloc.free(name);
       },
     );
+      'path': mpv_format.MPV_FORMAT_STRING,
 
     // TODO: dispose
     final nativeCallable = WakeUpNativeCallable.listener(_mpvCallback);
@@ -402,6 +403,7 @@ class Player {
   final ValueNotifier<double> duration = ValueNotifier<double>(0.0);
   final ValueNotifier<double> volume = ValueNotifier<double>(100);
   final ValueNotifier<double> speed = ValueNotifier<double>(1.0);
+  final ValueNotifier<String> path = ValueNotifier<String>('');
 
   Function(String, mpv_format)? propertyChangedCallback;
   final Set<String> _observedProperties = {};
@@ -422,6 +424,9 @@ class Player {
       if (propName == 'pause' &&
           prop.ref.format == mpv_format.MPV_FORMAT_FLAG) {
         paused.value = prop.ref.data.cast<Int8>().value != 0;
+      } else if (propName == 'path' &&
+          prop.ref.format == mpv_format.MPV_FORMAT_STRING) {
+        path.value = prop.ref.data.cast<Utf8>().toDartString();
       } else if (propName == 'duration' &&
           prop.ref.format == mpv_format.MPV_FORMAT_DOUBLE) {
         duration.value = prop.ref.data.cast<Double>().value;
