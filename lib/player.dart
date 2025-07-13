@@ -295,7 +295,7 @@ class Player {
   }
 
   void setOptionFlag(String name, bool value) {
-    final ptr = calloc<Bool>(1)..value = value;
+    final ptr = calloc<Int32>(1)..value = value ? 1 : 0;
     setOptionAll(
       name,
       mpv_format.MPV_FORMAT_FLAG,
