@@ -199,7 +199,7 @@ class Player {
   }
 
   void setPropertyFlag(String name, bool value) {
-    final ptr = calloc<Bool>(1)..value = value;
+    final ptr = calloc<Int32>(1)..value = value ? 1 : 0;
     _setProperty(
       name,
       mpv_format.MPV_FORMAT_FLAG,
