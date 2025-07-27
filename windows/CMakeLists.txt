@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.14)
 # Project-level configuration.
 set(PROJECT_NAME "libmpv_dart")
 project(${PROJECT_NAME} LANGUAGES CXX)
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../src")
