@@ -69,7 +69,7 @@ class Player {
       'video-out-params': mpv_format.MPV_FORMAT_NODE,
       'audio-params': mpv_format.MPV_FORMAT_NODE,
       'path': mpv_format.MPV_FORMAT_STRING,
-      'loop-file': mpv_format.MPV_FORMAT_FLAG
+      'loop-file': mpv_format.MPV_FORMAT_STRING
     }.forEach(
       (property, format) {
         final name = property.toNativeUtf8();
@@ -430,8 +430,9 @@ class Player {
           prop.ref.format == mpv_format.MPV_FORMAT_STRING) {
         path.value = prop.ref.data.cast<Pointer<Utf8>>().value.toDartString();
       } else if (propName == 'loop-file' &&
-          prop.ref.format == mpv_format.MPV_FORMAT_FLAG) {
-        loopFile.value = prop.ref.data.cast<Int32>().value != 0;
+          prop.ref.format == mpv_format.MPV_FORMAT_STRING) {
+        final propString = prop.ref.data.cast<Utf8>().toDartString();
+        loopFile.value = propString == "inf";
       } else if (propName == 'duration' &&
           prop.ref.format == mpv_format.MPV_FORMAT_DOUBLE) {
         duration.value = prop.ref.data.cast<Double>().value;
