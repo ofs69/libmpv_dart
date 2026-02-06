@@ -154,7 +154,7 @@ class Player {
     id.value = textureId;
   }
 
-  void command(List<String> args) {
+  mpv_error command(List<String> args) {
     var pointers = args.map((str) => str.toNativeUtf8()).toList();
     final arr = calloc<Pointer<Utf8>>(sizeOf<Pointer<Utf8>>() * args.length);
 
@@ -169,6 +169,7 @@ class Player {
     }
     calloc.free(arr);
     pointers.forEach(calloc.free);
+    return mpv_error.fromValue(error);
   }
 
   void commandNode(Pointer<mpv_node> node1, Pointer<mpv_node> node2) {
@@ -431,7 +432,8 @@ class Player {
         path.value = prop.ref.data.cast<Pointer<Utf8>>().value.toDartString();
       } else if (propName == 'loop-file' &&
           prop.ref.format == mpv_format.MPV_FORMAT_STRING) {
-        final propString = prop.ref.data.cast<Pointer<Utf8>>().value.toDartString();
+        final propString =
+            prop.ref.data.cast<Pointer<Utf8>>().value.toDartString();
         loopFile.value = propString == "inf";
       } else if (propName == 'duration' &&
           prop.ref.format == mpv_format.MPV_FORMAT_DOUBLE) {
