@@ -431,7 +431,7 @@ class Player {
         path.value = prop.ref.data.cast<Pointer<Utf8>>().value.toDartString();
       } else if (propName == 'loop-file' &&
           prop.ref.format == mpv_format.MPV_FORMAT_STRING) {
-        final propString = prop.ref.data.cast<Utf8>().toDartString();
+        final propString = prop.ref.data.cast<Pointer<Utf8>>().value.toDartString();
         loopFile.value = propString == "inf";
       } else if (propName == 'duration' &&
           prop.ref.format == mpv_format.MPV_FORMAT_DOUBLE) {
