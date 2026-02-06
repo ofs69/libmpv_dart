@@ -407,6 +407,7 @@ class Player {
   final ValueNotifier<double> speed = ValueNotifier<double>(1.0);
   final ValueNotifier<String> path = ValueNotifier<String>('');
   final ValueNotifier<bool> loopFile = ValueNotifier(false);
+  final ValueNotifier<bool> mediaLoaded = ValueNotifier(false);
 
   Function(String, mpv_format)? propertyChangedCallback;
   final Set<String> _observedProperties = {};
@@ -416,6 +417,14 @@ class Player {
       final event = Library.libmpv.mpv_wait_event(ctx, 0);
       if (event == nullptr) return;
       if (event.ref.event_id == mpv_event_id.MPV_EVENT_NONE) return;
+      if (event.ref.event_id == mpv_event_id.MPV_EVENT_FILE_LOADED) {
+        mediaLoaded.value = true;
+        return;
+      } else if (event.ref.event_id == mpv_event_id.MPV_EVENT_END_FILE) {
+        Pointer<mpv_event_end_file> _ = event.cast<mpv_event_end_file>();
+        mediaLoaded.value = false;
+        return;
+      }
       await _mpvEventHandler(event);
     }
   }
