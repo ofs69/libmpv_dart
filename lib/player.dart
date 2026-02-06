@@ -416,12 +416,6 @@ class Player {
       final event = Library.libmpv.mpv_wait_event(ctx, 0);
       if (event == nullptr) return;
       if (event.ref.event_id == mpv_event_id.MPV_EVENT_NONE) return;
-      if (event.ref.event_id == mpv_event_id.MPV_EVENT_FILE_LOADED) {
-        return;
-      } else if (event.ref.event_id == mpv_event_id.MPV_EVENT_END_FILE) {
-        Pointer<mpv_event_end_file> _ = event.cast<mpv_event_end_file>();
-        return;
-      }
       await _mpvEventHandler(event);
     }
   }
