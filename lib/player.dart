@@ -408,7 +408,7 @@ class Player {
   final ValueNotifier<double> speed = ValueNotifier<double>(1.0);
   final ValueNotifier<String> path = ValueNotifier<String>('');
   final ValueNotifier<bool> loopFile = ValueNotifier(false);
-  final ValueNotifier<String> playlist = ValueNotifier("{}");
+  final ValueNotifier<String> playlist = ValueNotifier("[]");
 
   Function(String, mpv_format)? propertyChangedCallback;
   final Set<String> _observedProperties = {};
