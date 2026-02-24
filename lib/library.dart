@@ -15,7 +15,8 @@ class Library {
           return DynamicLibrary.open(path);
         }
         if (Platform.isMacOS || Platform.isIOS) {
-          return DynamicLibrary.open('$_libName.framework/$_libName');
+          //return DynamicLibrary.open('$_libName.framework/$_libName');
+          return DynamicLibrary.open('libmpv.2.dylib');
         }
         if (Platform.isAndroid || Platform.isLinux) {
           return DynamicLibrary.open('lib$_libName.so');
